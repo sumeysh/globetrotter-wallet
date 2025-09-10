@@ -13,7 +13,7 @@ export default function ExchangeScreen({ currencies, onNavigate, onExchange }: E
   const [exchangeFrom, setExchangeFrom] = useState('USD');
   const [exchangeTo, setExchangeTo] = useState('EUR');
   const [isLoading, setIsLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [step, setStep] = useState<'form' | 'confirm' | 'success'>('form');
   const [exchangeResult, setExchangeResult] = useState<any>(null);
 
   const fromCurrency = currencies.find(c => c.code === exchangeFrom);
@@ -53,7 +53,7 @@ export default function ExchangeScreen({ currencies, onNavigate, onExchange }: E
         rate: exchangeRate
       });
       
-      setShowSuccess(true);
+      setStep('success');
     } catch (error) {
       console.error('Exchange failed:', error);
     } finally {
@@ -67,12 +67,12 @@ export default function ExchangeScreen({ currencies, onNavigate, onExchange }: E
   };
 
   const resetForm = () => {
-    setShowSuccess(false);
+    setStep('form');
     setExchangeAmount('');
     setExchangeResult(null);
   };
 
-  if (showSuccess && exchangeResult) {
+  if (step === 'success' && exchangeResult) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -172,6 +172,7 @@ export default function ExchangeScreen({ currencies, onNavigate, onExchange }: E
       </div>
 
       {/* Exchange Form */}
+      {step === 'form' && (
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <div className="space-y-6">
           {/* From Currency */}
@@ -252,9 +253,49 @@ export default function ExchangeScreen({ currencies, onNavigate, onExchange }: E
           </div>
 
           <button 
-            onClick={handleExchange}
+            onClick={() => setStep('confirm')}
             disabled={!exchangeAmount || isLoading || parseFloat(exchangeAmount) > (fromCurrency?.balance || 0)}
             className="w-full bg-slate-600 hover:bg-slate-700 disabled:bg-gray-300 text-white font-semibold py-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            <Globe size={18} />
+            <span>Review Exchange</span>
+          </button>
+        </div>
+      </div>
+      )}
+
+      {step === 'confirm' && (
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-6">Confirm Exchange</h3>
+        <div className="space-y-4 mb-6">
+          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+            <span className="text-gray-600">You Pay</span>
+            <span className="font-bold text-gray-800">{exchangeAmount} {exchangeFrom}</span>
+          </div>
+          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+            <span className="text-gray-600">You Receive</span>
+            <span className="font-bold text-green-600">{calculatedExchange || '0.00'} {exchangeTo}</span>
+          </div>
+          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+            <span className="text-gray-600">Rate</span>
+            <span className="font-mono text-sm text-gray-700">1 {exchangeFrom} = {exchangeRate.toFixed(4)} {exchangeTo}</span>
+          </div>
+          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+            <span className="text-gray-600">Fee</span>
+            <span className="font-medium text-green-600">No hidden fees</span>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setStep('form')}
+            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 rounded-xl transition-colors"
+          >
+            Back
+          </button>
+          <button 
+            onClick={handleExchange}
+            disabled={isLoading}
+            className="flex-1 bg-slate-600 hover:bg-slate-700 disabled:bg-gray-300 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
@@ -270,6 +311,7 @@ export default function ExchangeScreen({ currencies, onNavigate, onExchange }: E
           </button>
         </div>
       </div>
+      )}
 
       {/* Recent Exchanges */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">

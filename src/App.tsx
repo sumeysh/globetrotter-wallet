@@ -91,7 +91,6 @@ function App() {
             budgets={budgets}
             onNavigate={setActiveScreen}
             onCreateBudget={createBudget}
-            onCreateBudget={createBudget}
           />
         );
       case 'transactions':

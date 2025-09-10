@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Plus, TrendingUp, MapPin, Calendar, PieChart } from 'lucide-react';
 import { TravelBudget } from '../../data/mockData';
 
@@ -27,6 +27,17 @@ export default function BudgetScreen({ budgets, onNavigate, onCreateBudget }: Bu
   });
   const [isCreating, setIsCreating] = useState(false);
 
+  // Keep selected budget in sync when new budgets arrive or when the list changes
+  useEffect(() => {
+    if (!selectedBudget && budgets.length > 0) {
+      setSelectedBudget(budgets[0]);
+    }
+    // If the currently selected budget id no longer exists, select the first
+    if (selectedBudget && budgets.length > 0 && !budgets.find(b => b.id === selectedBudget.id)) {
+      setSelectedBudget(budgets[0]);
+    }
+  }, [budgets]);
+
   const handleCreateBudget = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!onCreateBudget || !newBudget.destination || !newBudget.totalBudget) return;
@@ -45,6 +56,7 @@ export default function BudgetScreen({ budgets, onNavigate, onCreateBudget }: Bu
       console.log('Budget creation result:', result);
       
       setShowCreateForm(false);
+      // After creation, rely on budgets prop update to select the newly added item
       setNewBudget({
         destination: '',
         totalBudget: '',
